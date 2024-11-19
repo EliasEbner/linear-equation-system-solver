@@ -1,0 +1,14 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-std=c11",
+      "-omain",
+      "-Iinclude",
+      "src/main.c"
+    ],
+    "directory": "/home/eliasebner/Documents/c/gaussian-elimination",
+    "file": "/home/eliasebner/Documents/c/gaussian-elimination/src/main.c"
+  }
+]
