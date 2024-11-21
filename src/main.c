@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 
 // frees the memory of a double pointer (2d array or matrix)
@@ -63,8 +64,6 @@ void back_substitution(int num_equations, double **coefficient_matrix, double *c
 				variables[row] = temp_variable / coefficient_matrix[row][pivot_col];
 			}
 		}
-		
-		
 	}
 }
 
@@ -115,9 +114,26 @@ void solve_linear_system(int num_equations, double **coefficient_matrix, double 
 	back_substitution(num_equations, coefficient_matrix, const_vector, variables);
 }
 
+void get_matrix_from_string(int num_equations, double **coefficient_matrix, char **matrix_string)
+{
+	char *element;
+	const char delimiter[] = " ";
+	for(int row = 0; row < num_equations; row++)
+	{
+		element = strtok(matrix_string[row], delimiter);
+		if(element[0] != '\0')
+			coefficient_matrix[row][0] = strtol(element, NULL, 10);
+
+		while(element != NULL)
+		{
+			// add all the elements and check for overflow
+			element = strtok(NULL, delimiter);
+		}
+	}
+}
+
 int main()
 {
-	/*
 	char buffer[256];
 	printf(
 		"The system of equations has to be linear AND square\n\n"
@@ -129,13 +145,25 @@ int main()
 	{
 		num_equations = strtol(buffer, NULL, 10);
 	}
+	
+	printf("%d", num_equations);
 
 	int* coefficient_matrix[num_equations];
 	for(int i = 0; i < num_equations; i++) coefficient_matrix[i] = calloc(num_equations, sizeof(int));
-	*/
 
+	printf(
+		"\nEnter the coefficient matrix A:\n"
+	);
+
+	
+
+	//if(fgets(buffer))
+
+
+
+
+	/*
 	int num_equations = 3;
-
 	double **coefficient_matrix = malloc(num_equations * sizeof(double*));
 	for(int i = 0; i < num_equations; i++)
 	{
@@ -179,6 +207,7 @@ int main()
 	free_2d_array(num_equations, coefficient_matrix);
 	free(variables);
 	free(const_vector);
+	*/
 	
 
 	return 0;
