@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 
 // frees the memory of a double pointer (2d array or matrix)
@@ -12,12 +13,16 @@ void free_2d_array(int rows, double** matrix)
 }
 
 // works
-// swaps two rows of a 2d array (int**)
-void swap_rows(double** matrix, int row1, int row2)
+// swaps two rows of a linear system (coefficient matrix and constants vector)
+void swap_rows(double** matrix, double* vector, int row1, int row2)
 {
 	double* temp = matrix[row1];
 	matrix[row1] = matrix[row2];
 	matrix[row2] = temp;
+
+	double temp_const = vector[row1];
+	vector[row1] = vector[row2];
+	vector[row2] = temp_const;
 }
 
 
@@ -27,7 +32,7 @@ int get_pivot_col(int row_length, double* row)
 {
 	for(int col = 0; col < row_length; col++)
 	{
-		if(row[col] != 0) return col;
+		if(fabs(row[col]) > 1e-9) return col;
 	}
 
 	return -1;
@@ -35,9 +40,8 @@ int get_pivot_col(int row_length, double* row)
 
 
 // still work in progress
-void back_substitution(int num_equations, double** coefficient_matrix, double* const_vector)
+void back_substitution(int num_equations, double **coefficient_matrix, double *const_vector, double *variables)
 {
-	double* variables = malloc(num_equations * sizeof(double));
 	for(int row = num_equations - 1; row >= 0; row--)
 	{
 		int pivot_col = get_pivot_col(num_equations, coefficient_matrix[row]);
@@ -47,7 +51,20 @@ void back_substitution(int num_equations, double** coefficient_matrix, double* c
 			exit(EXIT_FAILURE);
 		}
 
-
+		double temp_variable = const_vector[row];
+		for(int col = num_equations - 1; col >= pivot_col; col--)
+		{
+			if(col != pivot_col)
+			{
+				temp_variable -= variables[col] * coefficient_matrix[row][col];
+			}
+			else
+			{
+				variables[row] = temp_variable / coefficient_matrix[row][pivot_col];
+			}
+		}
+		
+		
 	}
 }
 
@@ -61,7 +78,7 @@ void gaussian_elimination(int num_equations, double** coefficient_matrix, double
 		// find a row with a suitable pivot and swap it with the current row
 		for(int row = current_equation + 1; coefficient_matrix[current_equation][current_equation] == 0 && row < num_equations; row++)
 		{
-			swap_rows(coefficient_matrix, current_equation, row);
+			swap_rows(coefficient_matrix, const_vector, current_equation, row);
 		}
 
 		// find the column where the pivot is located at (first non-zero number)
@@ -85,17 +102,17 @@ void gaussian_elimination(int num_equations, double** coefficient_matrix, double
 			}
 
 			// also subtract from the right-hand side
-			const_vector[row] -= factor * const_vector[current_equation]
+			const_vector[row] -= factor * const_vector[current_equation];
 		}
 	}
 }
 
 
 // puts everything together
-void solve_linear_system(int num_equations, double** coefficient_matrix, double* const_vector)
+void solve_linear_system(int num_equations, double **coefficient_matrix, double *const_vector, double *variables)
 {
 	gaussian_elimination(num_equations, coefficient_matrix, const_vector);
-	back_substitution(num_equations, coefficient_matrix, const_vector);
+	back_substitution(num_equations, coefficient_matrix, const_vector, variables);
 }
 
 int main()
@@ -117,9 +134,9 @@ int main()
 	for(int i = 0; i < num_equations; i++) coefficient_matrix[i] = calloc(num_equations, sizeof(int));
 	*/
 
-	int num_equations = 5;
+	int num_equations = 3;
 
-	double** coefficient_matrix = malloc(num_equations * sizeof(double*));
+	double **coefficient_matrix = malloc(num_equations * sizeof(double*));
 	for(int i = 0; i < num_equations; i++)
 	{
 		coefficient_matrix[i] = malloc(num_equations * sizeof(double));
@@ -127,15 +144,15 @@ int main()
 
 	double temp_matrix[] = 
 	{
-		5, 4, 3, 2, 1,
-		0, 0, 2, 3, 4,
-		0, 1, 4, 5, 9,
-		10,8, 6, 6, 9,
-		0, 1, 4, 5, 8
+		3, 3, 2,
+		6, 3, 4,
+		8, 9, 1
 	};
 
-	double* const_vector;
-	for(int i = 0; i < num_equations; i++) const_vector[i] = 2*i + 1;
+	double *const_vector = malloc(num_equations * sizeof(double));
+	const_vector[0] = 15;
+	const_vector[1] = 24;
+	const_vector[2] = 29;
 
 	for(int i = 0; i < num_equations; i++)
 	{
@@ -148,14 +165,20 @@ int main()
 	}
 	printf("\n");
 
-	gaussian_elimination(num_equations, coefficient_matrix);
+	double *variables = malloc(num_equations * sizeof(double));
+	for(int i = 0; i < num_equations; i++) printf("%lf\n", const_vector[i]);
+	printf("\n");
+	solve_linear_system(num_equations, coefficient_matrix, const_vector, variables);
+
 	for(int i = 0; i < num_equations; i++) 
 	{
-		for(int j = 0; j < num_equations; j++) printf("%lf ", coefficient_matrix[i][j]);
-		printf("\n");
+		printf("%lf ", variables[i]);
 	}
 
+
 	free_2d_array(num_equations, coefficient_matrix);
+	free(variables);
+	free(const_vector);
 	
 
 	return 0;
